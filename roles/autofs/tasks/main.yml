@@ -1,0 +1,62 @@
+---
+# tasks file for autofs
+#
+# install autofs package
+- name: install autofs package
+  package:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - autofs
+  register: installautofs
+
+- name: debuging
+  debug:
+    var: installautofs
+ 
+# create /data directory mount point
+- name: create /data mount point
+  file:
+    path: /data
+    state: directory
+    owner: rsawyer
+    group: rsawyer
+    mode: 0770
+  register: mountpnt
+  when: installautofs.changed
+
+# install /etc/auto.master.d/file
+- name: copy master file
+  copy:
+    src: data.autofs
+    dest: /etc/auto.master.d/
+    owner: root
+    group: root
+    mode: 0644
+  when: mountpnt.changed
+
+# install /etc/auto.data file
+- name: copy auto.data file
+  copy:
+    src: auto.data
+    dest: /etc/
+    owner: root
+    group: root
+    mode: 0644
+  when: mountpnt.changed
+
+# enable and start autofs
+- name: enable and start autofs
+  service: 
+    name: autofs
+    state: started
+    enabled: yes
+
+# test /data
+- name: test automount with ls command
+  command: ls /data
+  register: testdata
+
+- name: output test data
+  debug:
+    var: testdata

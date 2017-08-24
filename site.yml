@@ -1,0 +1,5 @@
+---
+- name: site.yml configure autofs on client VMs
+  hosts: vms
+  roles:
+    - autofs
